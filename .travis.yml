@@ -1,0 +1,23 @@
+language: generic
+sudo: required
+services:
+  -docker
+
+before_install:
+  - docker build -t dimitronikito/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true dimitronikito/react-test npm test
+
+after_success:
+  - docker build -t dimitronikito/multi-client ./client
+  - docker build -t dimitronikito/multi-nginx ./nginx
+  - docker build -t dimitronikito/multi-server ./server
+  - docker build -t dimitronikito/multi-worker ./worker
+  # Log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take above images and push to docker hub
+  - docker push dimitronikito/multi-client
+  - docker push dimitronikito/multi-nginx
+  - docker push dimitronikito/multi-server
+  - docker push dimitronikito/multi-worker
